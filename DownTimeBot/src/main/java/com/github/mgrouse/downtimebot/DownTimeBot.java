@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
+import service.ServiceFactory;
 
 
 public class DownTimeBot implements EventListener
@@ -86,6 +87,11 @@ public class DownTimeBot implements EventListener
 	// other JDA stuff? memmory cache?
 
 	uploadCommands();
+
+	// get a sheets service to kick off the authentication service for new
+	// credentials
+	// if we need them, with out need ing to issue a Discord command
+	ServiceFactory.getSheetsService();
 
 	// would there be a way to await some sort of
 	// shut down command? or re-start command?
