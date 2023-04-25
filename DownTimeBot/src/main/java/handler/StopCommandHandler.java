@@ -1,10 +1,5 @@
 package handler;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,19 +27,15 @@ public class StopCommandHandler implements ICommandHandler
 
 	String serverName = member.getEffectiveName();
 
-	Date today = Calendar.getInstance(TimeZone.getTimeZone("GMT +0")).getTime();
-	// "yyyy-MM-dd"
-	SimpleDateFormat dateFormatter = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
-	dateFormatter.setTimeZone(TimeZone.getTimeZone("GMT +0"));
+	String mention = CommandHandlerHelper.getAdminMention(event);
 
 	// log time and name of user
-	String message = "Stop command issued at: " + today.toString() + " by: " + serverName;
+	String message = mention + " Stop command issued by: " + serverName;
 
 	event.getHook().sendMessage(message).queue();
 
 	// Stop timer/worker
 	ClockWatcher.stop();
     }
-
 
 }

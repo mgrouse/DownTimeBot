@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimerTask;
 
+import com.github.mgrouse.downtimebot.Secret;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets.Values.Update;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
@@ -16,16 +17,26 @@ import service.ServiceFactory;
 
 public class DownTimeTracker extends TimerTask
 {
-    static final String SPREADSHEET_ID = "1hWa9BuyQ8vB5AQyzV0-o0IIa_Zpfo4eyrrfNYARGMUA";
+    // If the last cell in a range is blank, it is not included.
+    // (row will not contain the blank cell's "Empty" value)
 
-    // This needs to go to J because if I is blank, I is not included.
-    // (row will not contain the blank cell's value)
-    static final String RANGE_FULL = "Town Directory!A3:J";
-    static final String RANGE_DT = "Town Directory!F3";
+    // static final String RANGE_HEADER = SHEET_NAME + "1:1";
+    static final String SHEET_NAME = "Town Directory!";
+
+    static final String RANGE_FULL = SHEET_NAME + "J2:K";
+    static final String COLUMN_DT = SHEET_NAME + "J2";
+
+    // Regex
+    static final String NUMBER = "-?\\d+";
+    static final String MISSION = "[a-zA-Z].*";
 
     // zero based
-    static final int ACT_MISSION_INDEX = 8;
-    static final int DT_HOURS_INDEX = 5;
+    static final int DT_HOURS_INDEX = 0;
+    static final int ACT_MISSION_INDEX = 1;
+
+    // both pieces of data equals a list size of 2
+    static final int FULL_SIZE = 2;
+
 
     @Override
     public void run()
@@ -36,7 +47,7 @@ public class DownTimeTracker extends TimerTask
 
     public static void addDownTime()
     {
-	ValueRange sheetData = getDownTimeDdata();
+	ValueRange sheetData = getDownTimeData();
 
 	// for debugging
 	// printValueRange(sheetData.getValues());
@@ -53,6 +64,26 @@ public class DownTimeTracker extends TimerTask
 
     }
 
+
+    private static ValueRange getDownTimeData()
+    {
+
+	Sheets service = ServiceFactory.getSheetsService();
+
+	ValueRange response = null;
+	try
+	{
+	    response = service.spreadsheets().values().get(Secret.getSheetID(), RANGE_FULL).execute();
+	}
+	catch (IOException e)
+	{
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+	}
+
+	return response;
+    }
+
     private static UpdateValuesResponse updateData(ValueRange originalData)
     {
 	UpdateValuesResponse result = null;
@@ -65,18 +96,63 @@ public class DownTimeTracker extends TimerTask
 
 	for (List<Object> originalRow : originalData.getValues())
 	{
-	    // if there is no adventure in the Active Mission column?
-	    if (originalRow.get(ACT_MISSION_INDEX).toString().isEmpty())
+	    // size is 1 based, Index is 0 based
+
+	    switch (originalRow.size())
 	    {
-		// Add one DownTime day
-		newColumn.add(plusOneAsList(originalRow));
+		case 0:
+		    // add an empty list to preserve spacing.
+		    newColumn.add(new ArrayList<Object>());
+		    break;
+
+		case 1:
+		    // this one means DT only was returned,
+		    // could be a number or something wacky
+
+		    // if number
+		    if (originalRow.get(DT_HOURS_INDEX).toString().matches(NUMBER))
+		    {
+			// add DT
+			newColumn.add(plusOneAsList(originalRow));
+		    }
+		    // if something wacky
+		    else
+		    {
+			// add the original data back
+			newColumn.add(Arrays.asList(originalRow.get(DT_HOURS_INDEX)));
+		    }
+		    break;
+
+		case 2:
+		    // if the Mission is filled in
+		    if (!originalRow.get(ACT_MISSION_INDEX).toString().isBlank())
+		    {
+			// The character is on a Mission, no additional DownTime has been earned.
+			// add the same original data into the newColumn data.
+			newColumn.add(Arrays.asList(originalRow.get(DT_HOURS_INDEX)));
+		    }
+		    else
+		    {
+			// if number
+			if (originalRow.get(DT_HOURS_INDEX).toString().matches(NUMBER))
+			{
+			    // add DT
+			    newColumn.add(plusOneAsList(originalRow));
+			}
+			// if something wacky
+			else
+			{
+			    // add the original data back
+			    newColumn.add(Arrays.asList(originalRow.get(DT_HOURS_INDEX)));
+			}
+		    }
+
+		    break;
+
+		default:
+		    break;
 	    }
-	    else
-	    {
-		// The character is on a Mission, no additional DownTime has been earned.
-		// add the same original data into the newColumn data.
-		newColumn.add(Arrays.asList(originalRow.get(DT_HOURS_INDEX)));
-	    }
+
 	}
 
 	range.setValues(newColumn);
@@ -84,7 +160,7 @@ public class DownTimeTracker extends TimerTask
 	Update update;
 	try
 	{
-	    update = sheets.spreadsheets().values().update(SPREADSHEET_ID, "F3", range);
+	    update = sheets.spreadsheets().values().update(Secret.getSheetID(), COLUMN_DT, range);
 
 	    update.setValueInputOption("RAW");
 
@@ -108,30 +184,13 @@ public class DownTimeTracker extends TimerTask
     {
 	List<Object> update = new ArrayList<Object>();
 
-	Integer newData = 1 + Integer.valueOf(original.get(DT_HOURS_INDEX).toString());
+	Long newData = 1 + Long.valueOf(original.get(DT_HOURS_INDEX).toString());
 
 	update.add(newData.toString());
 
 	return update;
     }
 
-    private static ValueRange getDownTimeDdata()
-    {
-	Sheets service = ServiceFactory.getSheetsService();
-
-	ValueRange response = null;
-	try
-	{
-	    response = service.spreadsheets().values().get(SPREADSHEET_ID, RANGE_FULL).execute();
-	}
-	catch (IOException e)
-	{
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	}
-
-	return response;
-    }
 
     private static void printValueRange(List<List<Object>> rows)
     {
@@ -143,21 +202,18 @@ public class DownTimeTracker extends TimerTask
 	else
 	{
 	    System.out.println("======================================");
-	    System.out.println("User,    PC,    Adventure,  DT Hours");
+
 	    for (List<Object> row : rows)
 	    {
-//		StringBuffer s = new StringBuffer("");
-//		for (Object o : row)
-//		{
-//		    s.append(o);
-//		    s.append(", ");
-//		}
-//
-//		System.out.println(s.toString());
+		StringBuffer s = new StringBuffer("");
+		for (Object o : row)
+		{
+		    s.append(o);
+		    s.append(", ");
+		}
 
-		// Print columns A, B, I, and F, which correspond to indices 0, 1, 8, and 5.
-		System.out.printf("%s, %s, %s, %s\n", row.get(0), row.get(1), row.get(ACT_MISSION_INDEX),
-			row.get(DT_HOURS_INDEX));
+		System.out.println(s.toString());
+
 	    }
 	}
     }

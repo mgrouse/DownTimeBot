@@ -34,8 +34,13 @@ public class CommandDispatcher extends ListenerAdapter
 	// defer reply cancels that message
 	event.deferReply(isEphemeral).queue();
 
-	// only allow calling DownTime bot from the "admin-chat" channel
-	if (event.getChannel().getName().contentEquals(Secret.ADMIN_CHANNEL) && (isAdmin(event.getMember())))
+	// only allow calling DownTime bot from the "correct" channel
+	if (event.getChannel().getName().contentEquals(Secret.ADMIN_CHANNEL) &&
+	// and either Admin or Me
+		(isAdmin(event.getMember()) || isMichael(event.getMember()))//
+	)
+
+
 	{
 	    switch (event.getName())
 	    {
@@ -96,6 +101,18 @@ public class CommandDispatcher extends ListenerAdapter
 		retVal = true;
 		break;
 	    }
+	}
+
+	return retVal;
+    }
+
+    private Boolean isMichael(Member member)
+    {
+	Boolean retVal = false;
+
+	if (member.getUser().getName().contentEquals("Go1denScarab"))
+	{
+	    retVal = true;
 	}
 
 	return retVal;
