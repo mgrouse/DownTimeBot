@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.github.mgrouse.downtimebot.Secret;
 
 import handler.StartCommandHandler;
+import handler.StatusCommandHandler;
 import handler.StopCommandHandler;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -56,12 +57,12 @@ public class CommandDispatcher extends ListenerAdapter
 		    stopHandler.go(event);
 		    break;
 		}
-//	    case "status":
-//	    {
-//		StatusCommandHandler stausHandler = new StatusCommandHandler();
-//		stausHandler.go(event);
-//		break;
-//	    }
+		case "status":
+		{
+		    StatusCommandHandler stausHandler = new StatusCommandHandler();
+		    stausHandler.go(event);
+		    break;
+		}
 //	    case "file":
 //	    {
 //		StatusCommandHandler stausHandler = new StatusCommandHandler();

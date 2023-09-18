@@ -8,20 +8,16 @@ import org.slf4j.LoggerFactory;
 
 import com.github.mgrouse.downtimebot.Secret;
 
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import timer.ClockWatcher;
 import timer.DownTimeTracker;
 
 
-public class StartCommandHandler extends TimerTask implements ICommandHandler
+public class StartCommandHandler extends BaseCommandHandler
 {
     private static Logger m_logger = LoggerFactory.getLogger(StartCommandHandler.class);
 
-    private MessageChannel m_channel;
-
-    private String m_mention;
 
     public StartCommandHandler()
     {
@@ -33,41 +29,57 @@ public class StartCommandHandler extends TimerTask implements ICommandHandler
     public void go(SlashCommandInteractionEvent event)
     {
 	// check things out
+	getEventData(event);
 
-	Member member = event.getMember();
+	// Create the message
+	String message = getAdminMention() + " DownTime ran at: " + now();
 
-	m_mention = CommandHandlerHelper.getAdminMention(event);
-
-	String serverName = member.getEffectiveName();
-
-	// log time and name of user
-	String message = m_mention + " Start command issued by: " + serverName;
-
-	event.getHook().sendMessage(message).queue();
-
-	m_channel = event.getChannel();
+	// Create the task
+	MyTask myTask = new MyTask(getChannel(), message);
 
 	// Start timer/worker
 	if (Secret.isProduction)
 	{
-	    ClockWatcher.start(this, CommandHandlerHelper.millisToMidnight(), ClockWatcher.ONE_DAY);
+	    ClockWatcher.start(myTask, getMillisToMidnight(), ClockWatcher.ONE_DAY);
 	}
 	else
 	{
 	    // For debugging.
-	    ClockWatcher.start(this, (long) 10, ClockWatcher.HALF_MINUTE);
+	    ClockWatcher.start(myTask, (long) 10, ClockWatcher.HALF_MINUTE);
 	}
     }
 
 
-    @Override
-    public void run()
+    private class MyTask extends TimerTask
     {
-	DownTimeTracker.addDownTime();
+	private MessageChannel m_channel;
 
-	String message = m_mention + " DownTime ran at: " + CommandHandlerHelper.now();
+	private String m_message = "";
 
-	m_channel.sendMessage(message).queue();
+	public MyTask(MessageChannel channel, String message)
+	{
+	    m_channel = channel;
+	    m_message = message;
+	}
+
+	@Override
+	public void run()
+	{
+	    DownTimeTracker.addDownTime();
+
+	    m_channel.sendMessage(m_message).queue();
+	}
     }
+
+//    @Override
+//    public void run()
+//    {
+//	DownTimeTracker.addDownTime();
+//
+//	String message = m_mention + " DownTime ran at: " + CommandHandlerHelper.now();
+//
+//	m_channel.sendMessage(message).queue();
+//    }
+
 
 }

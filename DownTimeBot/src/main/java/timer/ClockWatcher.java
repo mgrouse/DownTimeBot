@@ -37,8 +37,11 @@ public class ClockWatcher
 
 	    m_timer = null;
 	}
+    }
 
-
+    public Boolean isRunning()
+    {
+	return null != m_timer;
     }
 
 

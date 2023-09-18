@@ -1,6 +1,5 @@
 package service;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
@@ -35,15 +34,57 @@ public class ServiceFactory
     private static Sheets m_service = null;
 
 
-    /**
-     * Creates an authorized Credential object.
-     *
-     * @param HTTP_TRANSPORT The network HTTP Transport.
-     * @return An authorized Credential object.
-     * @throws IOException If the credentials.json file cannot be found.
-     */
-//    private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException
-//    {
+    private static void createSheetsService()
+    {
+	// Load client secrets.
+	ClassLoader loader = DownTimeBot.class.getClassLoader();
+
+	// get RESOURCE file as a BufferedReader
+	InputStream stream = loader.getResourceAsStream(CREDENTIALS_FILE_NAME);
+
+	GoogleCredential credential;
+	try
+	{
+	    credential = GoogleCredential.fromStream(stream)
+		    .createScoped(Collections.singleton(SheetsScopes.SPREADSHEETS));
+	    // Build a new authorized API client service.
+	    final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+
+	    Sheets.Builder builder = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential);
+	    builder.setApplicationName(APPLICATION_NAME);
+	    m_service = builder.build();
+	}
+	catch (Exception e)
+	{
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+	}
+
+    }
+
+
+    public static Sheets getSheetsService()
+    {
+	if (null == m_service)
+	{
+	    createSheetsService();
+	}
+
+	return m_service;
+    }
+
+}
+
+
+/**
+ * Creates an authorized Credential object.
+ *
+ * @param HTTP_TRANSPORT The network HTTP Transport.
+ * @return An authorized Credential object.
+ * @throws IOException If the credentials.json file cannot be found.
+ */
+//private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException
+//{
 //	// Load client secrets.
 //	ClassLoader loader = DownTimeBot.class.getClassLoader();
 //
@@ -69,11 +110,11 @@ public class ServiceFactory
 //	AuthorizationCodeInstalledApp app = new AuthorizationCodeInstalledApp(flow, receiver);
 //
 //	return app.authorize("user");
-//    }
+//}
 
 
-//    public static Sheets createSheetsService()
-//    {
+//public static Sheets createSheetsService()
+//{
 //
 //	try
 //	{
@@ -92,45 +133,5 @@ public class ServiceFactory
 //	    e.printStackTrace();
 //	}
 //	return m_service;
-//    }
+//}
 
-
-    private static void createSheetsService()
-    {
-	// Load client secrets.
-	ClassLoader loader = DownTimeBot.class.getClassLoader();
-
-	// get RESOURCE file as a BufferedReader
-	InputStream stream = loader.getResourceAsStream(CREDENTIALS_FILE_NAME);
-
-	GoogleCredential credential;
-	try
-	{
-	    credential = GoogleCredential.fromStream(stream)
-		    .createScoped(Collections.singleton(SheetsScopes.SPREADSHEETS));
-	    // Build a new authorized API client service.
-	    final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-
-	    m_service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).build();
-
-	}
-	catch (Exception e)
-	{
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	}
-
-    }
-
-
-    public static Sheets getSheetsService()
-    {
-	if (null == m_service)
-	{
-	    createSheetsService();
-	}
-
-	return m_service;
-    }
-
-}
