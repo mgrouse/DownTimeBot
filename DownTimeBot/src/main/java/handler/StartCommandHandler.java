@@ -28,25 +28,30 @@ public class StartCommandHandler extends BaseCommandHandler
     @Override
     public void go(SlashCommandInteractionEvent event)
     {
+	m_logger.info("Processing Start Command.");
+
 	// check things out
 	getEventData(event);
 
-	// Create the message
+	// Create the message to announce a run each time
 	String message = getAdminMention() + " DownTime ran at: " + now();
 
 	// Create the task
 	MyTask myTask = new MyTask(getChannel(), message);
 
 	// Start timer/worker
-	if (Secret.isProduction)
-	{
-	    ClockWatcher.start(myTask, getMillisToMidnight(), ClockWatcher.ONE_DAY);
-	}
-	else
+	if (Secret.isDebug())
 	{
 	    // For debugging.
 	    ClockWatcher.start(myTask, (long) 10, ClockWatcher.HALF_MINUTE);
 	}
+	else
+	{
+	    ClockWatcher.start(myTask, getMillisToMidnight(), ClockWatcher.ONE_DAY);
+	}
+
+	getChannel().sendMessage("The timer has been started.").queue();
+	m_logger.info("The timer has been started.");
     }
 
 
@@ -65,9 +70,15 @@ public class StartCommandHandler extends BaseCommandHandler
 	@Override
 	public void run()
 	{
-	    DownTimeTracker.addDownTime();
-
-	    m_channel.sendMessage(m_message).queue();
+	    try
+	    {
+		m_channel.sendMessage(m_message).queue();
+		DownTimeTracker.addDownTime();
+	    }
+	    catch (Exception e)
+	    {
+		m_channel.sendMessage(e.getMessage()).queue();
+	    }
 	}
     }
 

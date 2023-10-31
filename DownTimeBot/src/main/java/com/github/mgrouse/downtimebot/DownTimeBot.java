@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import dispatcher.CommandDispatcher;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -24,6 +27,7 @@ import service.ServiceFactory;
 
 public class DownTimeBot implements EventListener
 {
+    private static Logger m_logger = LoggerFactory.getLogger(DownTimeBot.class);
 
 
     private JDABuilder jdaBuilder;
@@ -81,6 +85,7 @@ public class DownTimeBot implements EventListener
 
     public void run()
     {
+	m_logger.info("DownTimeBot is running...");
 	jdaBuilder.setStatus(OnlineStatus.ONLINE);
 	jdaBuilder.setActivity(Activity.playing("D&D"));
 
@@ -90,7 +95,7 @@ public class DownTimeBot implements EventListener
 
 	// get a sheets service to kick off the authentication service for new
 	// credentials
-	// if we need them, with out need ing to issue a Discord command
+	// if we need them, with out needing to issue a Discord command
 	ServiceFactory.getSheetsService();
 
 	// would there be a way to await some sort of
@@ -117,6 +122,12 @@ public class DownTimeBot implements EventListener
 //	OptionData opts = new OptionData(OptionType.STRING, "id", "The numbers at the end of the PC's DNDB URL.");
 //	opts.setRequired(true);
 //	data.addOptions(opts);
+
+	slashCmds.add(data);
+
+	// Status
+	data = Commands.slash("status", "Returns the status of Downtime Bot, either \"Running\" or \"Stopped\". ");
+
 
 	slashCmds.add(data);
 

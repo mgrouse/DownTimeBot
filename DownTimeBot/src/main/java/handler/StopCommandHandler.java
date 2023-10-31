@@ -20,11 +20,16 @@ public class StopCommandHandler extends BaseCommandHandler
     @Override
     public void go(SlashCommandInteractionEvent event)
     {
+	m_logger.info("Processing Stop Command.");
+
 	// check things out
 	getEventData(event);
 
 	// Stop timer/worker
 	ClockWatcher.stop();
+
+	getChannel().sendMessage("The timer has been stopped.").queue();
+	m_logger.info("The timer has been stopped.");
     }
 
 }

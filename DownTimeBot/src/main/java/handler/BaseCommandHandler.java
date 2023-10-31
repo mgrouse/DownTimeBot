@@ -4,6 +4,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.TimeZone;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.Role;
@@ -12,6 +15,9 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 
 public abstract class BaseCommandHandler implements ICommandHandler
 {
+    private static Logger m_logger = LoggerFactory.getLogger(BaseCommandHandler.class);
+
+
     private MessageChannel m_channel;
 
     private Member m_member;
@@ -41,9 +47,14 @@ public abstract class BaseCommandHandler implements ICommandHandler
 	String m_nameOnServer = m_member.getEffectiveName();
 
 	// log time and name of user
-	String message = m_adminMention + " " + event.getCommandId() + " command issued by: " + m_nameOnServer;
+	String message = m_adminMention + " " + event.getCommandString() + " command issued by: " + m_nameOnServer;
 
+	// This should use the Hook as it is the first "reply".
+	// We want it to replace the "thinking..." message
 	event.getHook().sendMessage(message).queue();
+
+	m_logger.info(message);
+
     }
 
 

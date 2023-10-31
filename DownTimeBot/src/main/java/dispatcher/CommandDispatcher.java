@@ -20,6 +20,7 @@ public class CommandDispatcher extends ListenerAdapter
 {
     private static Logger m_logger = LoggerFactory.getLogger(CommandDispatcher.class);
 
+
     public CommandDispatcher()
     {
 
@@ -29,6 +30,8 @@ public class CommandDispatcher extends ListenerAdapter
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event)
     {
+	m_logger.info("Command incomming...");
+
 	Boolean isEphemeral = false;
 
 	// We only have 3 seconds until Discord sends "App not responding"
@@ -85,7 +88,10 @@ public class CommandDispatcher extends ListenerAdapter
 	} // if ((channel)&&(Admin))
 	else
 	{
-	    event.getHook().sendMessage(" " + event.getName()).queue();
+	    event.getHook()
+		    .sendMessage(
+			    " " + event.getName() + " was not called from the correct channel or by the wrong person.")
+		    .queue();
 	}
     }
 
@@ -111,7 +117,7 @@ public class CommandDispatcher extends ListenerAdapter
     {
 	Boolean retVal = false;
 
-	if (member.getUser().getName().contentEquals("Go1denScarab"))
+	if (member.getUser().getName().contentEquals("go1denscarab"))
 	{
 	    retVal = true;
 	}

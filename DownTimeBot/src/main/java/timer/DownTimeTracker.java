@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.TimerTask;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.mgrouse.downtimebot.Secret;
 import com.google.api.services.sheets.v4.Sheets;
@@ -15,8 +17,10 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import service.ServiceFactory;
 
 
-public class DownTimeTracker extends TimerTask
+public class DownTimeTracker
 {
+    private static Logger m_logger = LoggerFactory.getLogger(DownTimeTracker.class);
+
     // If the last cell in a range is blank, it is not included.
     // (row will not contain the blank cell's "Empty" value)
 
@@ -38,15 +42,10 @@ public class DownTimeTracker extends TimerTask
     static final int FULL_SIZE = 2;
 
 
-    @Override
-    public void run()
+    public static void addDownTime() throws IOException
     {
-	addDownTime();
+	m_logger.info("Adding Down Time.");
 
-    }
-
-    public static void addDownTime()
-    {
 	ValueRange sheetData = getDownTimeData();
 
 	// for debugging
@@ -65,27 +64,29 @@ public class DownTimeTracker extends TimerTask
     }
 
 
-    private static ValueRange getDownTimeData()
+    private static ValueRange getDownTimeData() throws IOException
     {
+	m_logger.info("Retrieving current Down Time data.");
 
 	Sheets service = ServiceFactory.getSheetsService();
 
 	ValueRange response = null;
-	try
-	{
-	    response = service.spreadsheets().values().get(Secret.getSheetID(), RANGE_FULL).execute();
-	}
-	catch (IOException e)
-	{
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	}
+
+	response = service.spreadsheets().values().get(Secret.getSheetID(), RANGE_FULL).execute();
+
+//	catch (IOException e)
+//	{
+//	    // TODO Auto-generated catch block
+//	    e.printStackTrace();
+//	}
 
 	return response;
     }
 
-    private static UpdateValuesResponse updateData(ValueRange originalData)
+    private static UpdateValuesResponse updateData(ValueRange originalData) throws IOException
     {
+	m_logger.info("Updating Down Time values.");
+
 	UpdateValuesResponse result = null;
 
 	Sheets sheets = ServiceFactory.getSheetsService();
@@ -158,23 +159,22 @@ public class DownTimeTracker extends TimerTask
 	range.setValues(newColumn);
 
 	Update update;
-	try
-	{
-	    update = sheets.spreadsheets().values().update(Secret.getSheetID(), COLUMN_DT, range);
 
-	    update.setValueInputOption("RAW");
+	update = sheets.spreadsheets().values().update(Secret.getSheetID(), COLUMN_DT, range);
 
-	    // for debugging
-	    // update.setIncludeValuesInResponse(true);
+	update.setValueInputOption("RAW");
 
-	    result = update.execute();
+	// for debugging
+	// update.setIncludeValuesInResponse(true);
 
-	}
-	catch (IOException e)
-	{
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	}
+	result = update.execute();
+
+//	}
+//	catch (IOException e)
+//	{
+//	    // TODO Auto-generated catch block
+//	    e.printStackTrace();
+//	}
 
 	return result;
     }
