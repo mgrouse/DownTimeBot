@@ -28,7 +28,7 @@ public class StopCommandHandler extends BaseCommandHandler
 	// Stop timer/worker
 	ClockWatcher.stop();
 
-	getChannel().sendMessage("The timer has been stopped.").queue();
+	getHook().sendMessage("The timer has been stopped.").queue();
 	m_logger.info("The timer has been stopped.");
     }
 

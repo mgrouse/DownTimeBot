@@ -15,7 +15,6 @@ public class StatusCommandHandler extends BaseCommandHandler
 
     public StatusCommandHandler()
     {
-
     }
 
 
@@ -37,7 +36,7 @@ public class StatusCommandHandler extends BaseCommandHandler
 	    message = message + "Stopped.";
 	}
 
-	getChannel().sendMessage(message).queue();
+	getHook().sendMessage(message).queue();
     }
 
 

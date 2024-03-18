@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.mgrouse.downtimebot.Secret;
 
-import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import timer.ClockWatcher;
 import timer.DownTimeTracker;
@@ -21,7 +20,6 @@ public class StartCommandHandler extends BaseCommandHandler
 
     public StartCommandHandler()
     {
-
     }
 
 
@@ -33,11 +31,8 @@ public class StartCommandHandler extends BaseCommandHandler
 	// check things out
 	getEventData(event);
 
-	// Create the message to announce a run each time
-	String message = getAdminMention() + " DownTime ran at: " + now();
-
 	// Create the task
-	MyTask myTask = new MyTask(getChannel(), message);
+	MyTask myTask = new MyTask();
 
 	// Start timer/worker
 	if (Secret.isDebug())
@@ -50,47 +45,45 @@ public class StartCommandHandler extends BaseCommandHandler
 	    ClockWatcher.start(myTask, getMillisToMidnight(), ClockWatcher.ONE_DAY);
 	}
 
-	getChannel().sendMessage("The timer has been started.").queue();
+	getHook().sendMessage("The timer has been started.").queue();
 	m_logger.info("The timer has been started.");
     }
 
 
     private class MyTask extends TimerTask
     {
-	private MessageChannel m_channel;
 
-	private String m_message = "";
-
-	public MyTask(MessageChannel channel, String message)
+	public MyTask()
 	{
-	    m_channel = channel;
-	    m_message = message;
 	}
+
+	private String makeMessage()
+	{
+	    // Create the message to announce a run each time
+
+	    // ======
+	    // Yeah Private inner classes get to do this kinda stuff!!!
+	    // ======
+	    return getAdminMention() + " DownTime ran at: " + now();
+	}
+
 
 	@Override
 	public void run()
 	{
+	    // these need to be "getChanel()" as WebHooks only last 15 minutes
+	    // and if this is prod this will run once a day.
 	    try
 	    {
-		m_channel.sendMessage(m_message).queue();
+		getChannel().sendMessage(makeMessage()).queue();
 		DownTimeTracker.addDownTime();
 	    }
 	    catch (Exception e)
 	    {
-		m_channel.sendMessage(e.getMessage()).queue();
+		getChannel().sendMessage(e.getMessage()).queue();
 	    }
 	}
     }
-
-//    @Override
-//    public void run()
-//    {
-//	DownTimeTracker.addDownTime();
-//
-//	String message = m_mention + " DownTime ran at: " + CommandHandlerHelper.now();
-//
-//	m_channel.sendMessage(message).queue();
-//    }
 
 
 }

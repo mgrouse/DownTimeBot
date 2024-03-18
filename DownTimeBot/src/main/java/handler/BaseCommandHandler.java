@@ -11,12 +11,14 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 
 
 public abstract class BaseCommandHandler implements ICommandHandler
 {
     private static Logger m_logger = LoggerFactory.getLogger(BaseCommandHandler.class);
 
+    private InteractionHook m_hook;
 
     private MessageChannel m_channel;
 
@@ -38,6 +40,8 @@ public abstract class BaseCommandHandler implements ICommandHandler
 
     public void getEventData(SlashCommandInteractionEvent event)
     {
+	m_hook = event.getHook();
+
 	m_channel = event.getChannel();
 
 	m_member = event.getMember();
@@ -57,6 +61,10 @@ public abstract class BaseCommandHandler implements ICommandHandler
 
     }
 
+    public InteractionHook getHook()
+    {
+	return m_hook;
+    }
 
     public MessageChannel getChannel()
     {
